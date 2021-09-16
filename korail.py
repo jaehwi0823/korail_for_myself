@@ -31,14 +31,15 @@ def msg_to_slcak(msg, url=url):
 KR = Korail(login_dict['ID'], login_dict['PW'])
 dep = '용산'
 arr = '순천'
-date = '20210917'
-time = '180000'
+date = '20210922'
+time = '130000'
 # time = '000000'
+print(f"[{datetime.datetime.now()}] {date} {time} 이후 열차 중, {dep} -> {arr} 열차표를 예매 중입니다...")
 
 state = True
 idx = 1
 while(state):
-    if idx % 360 == 0:
+    if idx % 600 == 0:
         print(f"[{datetime.datetime.now()}] {date}, {time}, {dep} -> {arr} 열차표를 예매 중입니다...")
         print(trains)
     trains = KR.search_train(dep, arr, date, time, include_no_seats=True)
@@ -50,10 +51,13 @@ while(state):
                 break
     
     if interesting_train:
-        rslt = KR.reserve(interesting_train, [AdultPassenger()])
-        if '구입기한' in rslt.__repr__().split(' '):
-            msg_to_slcak(rslt.__repr__())
-            state = False
+        try:
+            rslt = KR.reserve(interesting_train, [AdultPassenger()])
+            if '구입기한' in rslt.__repr__().split(' '):
+                msg_to_slcak(rslt.__repr__())
+                state = False
+        except Exception as e:
+            print(e)
     tt.sleep(1)
     idx += 1
 
