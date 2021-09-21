@@ -98,6 +98,7 @@ if KR.login():
     if time == '':
         time = None
 
+    last_departure = input("최대로 늦은 기차 출발 시간은 언제까지 가능하세요?(몇시 전에는 기차가 출발해야 하나요?) <예>19\n>> ")
     want_ktx = input("검색조건을 입력해 주세요. 1:모든기차, 2:KTX만, 3:KTX제외 <예>1\n>> ")
     people_num = input("표 몇 매가 필요하십니까? <예>1\n>> ")
     time_limit = input("몇 시간 안에 이동해야 하나요? 입력 안하시면 모든 기차를 검색합니다. <예>3\n>> ")
@@ -118,6 +119,14 @@ if KR.login():
     else:
         people_num = int(people_num)
     
+    # 출발 시간 제한
+    if last_departure == "":
+        last_departure = 24
+    elif last_departure not in [str(i) for i in range(1,25)]:
+        print("이동시간 제한은 1시 ~ 24시만 가능합니다")
+    else:
+        last_departure = int(last_departure)
+
     # 시간제한
     if time_limit == "":
         time_limit = 999
@@ -153,8 +162,15 @@ if KR.login():
             interesting_train = None
             for train in trains:
                 train_info = train.__repr__()
+
+                # 최대 늦은 출발시간 (몇시 전에는 기차가 출발해야함)
+                st_idx = train_info.find("(")
+                ed_idx = train_info.find(")")
+                info_time = train_info[st_idx+1 : ed_idx]
+                st_hour = info_time.split("~")[0].split(":")[0]
                 Thour, Tmin = get_moving_time(train)
-                if Thour < time_limit:
+
+                if (Thour < time_limit) and (int(st_hour) < last_departure):
                     if want_ktx == '2':
                         if 'KTX' in train_info:
                             if '원' in train_info.split(' ')[-1]:
@@ -178,6 +194,7 @@ if KR.login():
                             msg_to_slcak(rslt.__repr__())
                         state = False
                         print("\n","="*20, " 열차표 예매에 성공했습니다!! 20분 내로 결제 해주십시오. ", "="*20)
+                        
                 except Exception as e:
                     if 'WRR800029' in e.__repr__():
                         state = False
