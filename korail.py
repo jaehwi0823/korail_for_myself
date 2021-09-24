@@ -192,8 +192,15 @@ if KR.login():
                     if '구입기한' in rslt.__repr__().split(' '):
                         if slack_use:
                             msg_to_slcak(rslt.__repr__())
-                        state = False
                         print("\n","="*20, " 열차표 예매에 성공했습니다!! 20분 내로 결제 해주십시오. ", "="*20)
+
+                        # 추가 예매 요건
+                        repeat_yn = input("동일한 조건으로 예매를 추가로 진행하시겠습니까?(Y/N) <예>N\n>> ")
+                        if (repeat_yn == 'Y') or (repeat_yn == 'y'):
+                            state = True
+                            idx = 1
+                        else:
+                            state = False
                         
                 except Exception as e:
                     if 'WRR800029' in e.__repr__():
