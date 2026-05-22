@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+#
+# Vendored from NomaDamas/k-skill (scripts/ktx_booking.py).
+#   source : https://github.com/NomaDamas/k-skill
+#   fetched: 2026-05-22
+#
+# Purpose: korail2 0.4.0 alone fails Korail's Dynapath anti-bot check with
+# "MACRO ERROR". PatchedKorail in this file restores login/search/reserve by
+# supplying x-dynapath-m-token, Sid, an up-to-date app version (250601002),
+# and a current Android user-agent.
+#
+# If Korail tightens the check again, re-sync this file from the source repo
+# above rather than editing the engine by hand.
 from __future__ import annotations
 
 import argparse

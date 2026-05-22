@@ -10,5 +10,10 @@ korail/
 __pycache__/
 *.py[cod]
 
+# build artifacts (PyInstaller)
+build/
+dist/
+*.spec
+
 # macOS
 .DS_Store
