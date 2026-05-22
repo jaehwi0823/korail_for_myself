@@ -163,19 +163,18 @@ if KR.login():
                 st_hour = info_time.split("~")[0].split(":")[0]
                 train_hour, _ = get_moving_time(train)
 
-                if (train_hour < time_limit) and (int(st_hour) < last_departure):
+                if (train_hour < time_limit) and (int(st_hour) < last_departure) and train.has_seat():
                     if want_ktx == "2":
-                        if "KTX" in train_info and "원" in train_info.split(" ")[-1]:
+                        if "KTX" in train_info:
                             interesting_train = train
                             break
                     elif want_ktx == "3":
-                        if "KTX" not in train_info and "원" in train_info.split(" ")[-1]:
+                        if "KTX" not in train_info:
                             interesting_train = train
                             break
                     else:
-                        if "원" in train_info.split(" ")[-1]:
-                            interesting_train = train
-                            break
+                        interesting_train = train
+                        break
 
             if interesting_train:
                 try:
