@@ -5,8 +5,9 @@ import time as tt
 
 import requests
 from dotenv import load_dotenv
-from korail2 import AdultPassenger, NoResultsError, TrainType
+from korail2 import NoResultsError, TrainType
 
+import booking
 import notify
 from ktx_booking import PatchedKorail as Korail
 
@@ -88,7 +89,11 @@ if KR.login():
 
     last_departure = input("최대로 늦은 기차 출발 시간은 언제까지 가능하세요?(몇시 전에는 기차가 출발해야 하나요?) <예>19\n>> ")
     want_ktx = input("검색조건을 입력해 주세요. 1:모든기차, 2:KTX만, 3:KTX제외 <예>1\n>> ")
-    people_num = input("표 몇 매가 필요하십니까? <예>1\n>> ")
+    seat_choice = input("좌석 등급을 선택해주세요. 1:일반실만, 2:일반실 우선, 3:특실만, 4:특실 우선 <예>2\n>> ")
+    adults = input("어른은 몇 명인가요? 입력 안하시면 0명입니다. <예>1\n>> ")
+    children = input("어린이(만 6~12세)는 몇 명인가요? 입력 안하시면 0명입니다. <예>0\n>> ")
+    toddlers = input("유아(만 6세 미만)는 몇 명인가요? 입력 안하시면 0명입니다. <예>0\n>> ")
+    seniors = input("경로(만 65세 이상)는 몇 명인가요? 입력 안하시면 0명입니다. <예>0\n>> ")
     time_limit = input("몇 시간 안에 이동해야 하나요? 입력 안하시면 모든 기차를 검색합니다. <예>3\n>> ")
 
     # 정보 체크
@@ -99,14 +104,20 @@ if KR.login():
         print("검색조건은 1, 2, 3 중 하나여야 합니다")
         raise_err = True
 
-    # 표 매수 1 ~ 8 only
-    if people_num == "":
-        people_num = 1
-    elif people_num not in [str(i) for i in range(1, 9)]:
-        print("표는 1매 ~ 8매가 가능합니다")
+    # 좌석 등급 1 ~ 4 only
+    if seat_choice not in booking.SEAT_CHOICES:
+        print("좌석 등급은 1, 2, 3, 4 중 하나여야 합니다")
         raise_err = True
-    else:
-        people_num = int(people_num)
+
+    # 승객 인원 (빈 값은 0명, 총 1 ~ 9명)
+    passenger_counts = None
+    try:
+        passenger_counts = booking.parse_passenger_counts(
+            adults, children, toddlers, seniors
+        )
+    except ValueError as e:
+        print(e)
+        raise_err = True
 
     # 출발 시간 제한
     if last_departure == "":
@@ -127,12 +138,16 @@ if KR.login():
         time_limit = int(time_limit)
 
     if not raise_err:
+        passengers = booking.build_passengers(**passenger_counts)
+        seat_label = booking.SEAT_CHOICES[seat_choice][0]
+
         # 문제없음 로그
         print("\n", "=" * 100)
         if date and train_time:
             print(f"{date}(년월일) {train_time}(시분초) 이후 열차 중, {dep} -> {arr} 열차표 예매를 시도하겠습니다!\n")
         else:
             print(f"현재 시간 이후 열차 중, {dep} -> {arr} 열차표 반복 예매를 시작합니다!\n")
+        print(f"좌석 등급: {seat_label} / 승객 {sum(passenger_counts.values())}명")
         print("열차 찾는중..")
 
         # KTX만 검색하는 경우 서버 측에서 미리 필터링한다
@@ -176,7 +191,7 @@ if KR.login():
             # 조건에 맞는 기차 찾기
             interesting_train = None
             for train in trains:
-                if not train.has_seat():
+                if not booking.train_has_desired_seat(train, seat_choice):
                     continue
 
                 st_hour = int(train.dep_time[:2])
@@ -197,7 +212,11 @@ if KR.login():
 
             if interesting_train:
                 try:
-                    rslt = KR.reserve(interesting_train, [AdultPassenger(int(people_num))])
+                    rslt = KR.reserve(
+                        interesting_train,
+                        passengers,
+                        option=booking.reserve_option(seat_choice),
+                    )
                     if rslt:
                         notify.send(f"KTX 예매 성공!\n{rslt}\n20분 내로 결제해주세요.")
                         print("\n", "=" * 20, " 열차표 예매에 성공했습니다!! 20분 내로 결제 해주십시오. ", "=" * 20)
