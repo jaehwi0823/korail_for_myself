@@ -9,6 +9,7 @@ korail/
 # python
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
 # build artifacts (PyInstaller)
 build/
