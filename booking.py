@@ -28,14 +28,21 @@ def reserve_option(seat_choice):
 def train_has_desired_seat(train, seat_choice):
     """Whether a train has a seat matching the seat choice.
 
-    '1' general-only -> needs a general seat
-    '3' special-only -> needs a special seat
-    '2'/'4' *-first  -> any seat is acceptable
+    Defined for keys in SEAT_CHOICES:
+      "1" general-only  -> needs a general seat
+      "2" general-first -> any available seat is acceptable
+      "3" special-only  -> needs a special seat
+      "4" special-first -> any available seat is acceptable
+    Raises KeyError for any other value; the caller is expected to
+    validate seat_choice against SEAT_CHOICES first.
     """
+    if seat_choice not in SEAT_CHOICES:
+        raise KeyError(seat_choice)
     if seat_choice == "1":
         return train.has_general_seat()
     if seat_choice == "3":
         return train.has_special_seat()
+    # "2" or "4" — general-first / special-first: any available seat is fine
     return train.has_seat()
 
 

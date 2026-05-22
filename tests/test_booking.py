@@ -57,6 +57,16 @@ def test_sold_out_train_rejected_for_all_choices():
         assert booking.train_has_desired_seat(sold_out, choice) is False
 
 
+def test_train_has_desired_seat_rejects_invalid_choice():
+    with pytest.raises(KeyError):
+        booking.train_has_desired_seat(FakeTrain(general=True, special=True), "5")
+
+
+def test_reserve_option_rejects_invalid_choice():
+    with pytest.raises(KeyError):
+        booking.reserve_option("5")
+
+
 # --- build_passengers -----------------------------------------------------
 
 def test_build_passengers_single_type():

@@ -109,8 +109,11 @@ if KR.login():
         print("좌석 등급은 1, 2, 3, 4 중 하나여야 합니다")
         raise_err = True
 
-    # 승객 인원 (빈 값은 0명, 총 1 ~ 9명)
-    passenger_counts = None
+    # 승객 인원 (빈 값은 0명, 총 1 ~ 9명).
+    # passenger_counts는 검증 통과 시에만 set되며, 실패 시 raise_err로 인해
+    # 아래 if not raise_err 블록에 진입하지 못한다. except 분기의 빈 dict는
+    # 만약 가드가 깨지더라도 build_passengers({})가 in-domain ValueError로
+    # 즉시 실패하도록 하는 안전망이다 (NameError/TypeError 회피).
     try:
         passenger_counts = booking.parse_passenger_counts(
             adults, children, toddlers, seniors
@@ -118,6 +121,7 @@ if KR.login():
     except ValueError as e:
         print(e)
         raise_err = True
+        passenger_counts = {}
 
     # 출발 시간 제한
     if last_departure == "":
