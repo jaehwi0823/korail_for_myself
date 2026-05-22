@@ -37,3 +37,55 @@ def train_has_desired_seat(train, seat_choice):
     if seat_choice == "3":
         return train.has_special_seat()
     return train.has_seat()
+
+
+# passenger-count dict key -> (Korean label, korail2 Passenger class)
+_PASSENGER_TYPES = {
+    "adults": ("어른", AdultPassenger),
+    "children": ("어린이", ChildPassenger),
+    "toddlers": ("유아", ToddlerPassenger),
+    "seniors": ("경로", SeniorPassenger),
+}
+
+
+def build_passengers(adults=0, children=0, toddlers=0, seniors=0):
+    """Build a korail2 passenger list from per-type counts.
+
+    Types with a zero count are omitted. Raises ValueError if the total
+    passenger count is zero.
+    """
+    counts = {"adults": adults, "children": children,
+              "toddlers": toddlers, "seniors": seniors}
+    if sum(counts.values()) < 1:
+        raise ValueError("승객은 최소 1명이어야 합니다")
+    return [
+        _PASSENGER_TYPES[key][1](count)
+        for key, count in counts.items()
+        if count > 0
+    ]
+
+
+def parse_passenger_counts(adults="", children="", toddlers="", seniors="",
+                           max_total=9):
+    """Parse raw string inputs into a {type: int} dict for build_passengers().
+
+    An empty string counts as 0. Raises ValueError with a Korean message
+    if any value is not a non-negative integer, or the total is not in
+    1..max_total.
+    """
+    raw = {"adults": adults, "children": children,
+           "toddlers": toddlers, "seniors": seniors}
+    counts = {}
+    for key, value in raw.items():
+        value = value.strip()
+        if value == "":
+            counts[key] = 0
+        elif value.isdigit():
+            counts[key] = int(value)
+        else:
+            label = _PASSENGER_TYPES[key][0]
+            raise ValueError(f"{label} 인원은 0 이상의 숫자여야 합니다")
+    total = sum(counts.values())
+    if not (1 <= total <= max_total):
+        raise ValueError(f"승객은 총 1명 ~ {max_total}명이어야 합니다")
+    return counts
