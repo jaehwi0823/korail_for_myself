@@ -1,0 +1,14 @@
+# secrets
+.env
+.env.*
+credentials/
+
+# virtualenv
+korail/
+
+# python
+__pycache__/
+*.py[cod]
+
+# macOS
+.DS_Store
