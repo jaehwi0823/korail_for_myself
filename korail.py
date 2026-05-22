@@ -7,6 +7,7 @@ import requests
 from dotenv import load_dotenv
 from korail2 import AdultPassenger, NoResultsError, TrainType
 
+import notify
 from ktx_booking import PatchedKorail as Korail
 
 
@@ -30,8 +31,10 @@ def get_required_env(name):
 
 ko_id = get_required_env("KORAIL_ID")
 ko_pw = get_required_env("KORAIL_PW")
-slack_url = os.environ.get("SLACK_WEBHOOK_URL", "")
-slack_use = bool(slack_url)
+
+# Kakao 알림 자격증명 — 누락 시 시작 시점에 바로 실패
+for _key in notify.REQUIRED_ENV:
+    get_required_env(_key)
 
 
 # licence
@@ -46,20 +49,7 @@ print("""
 print("#" * 80)
 print("")
 
-if slack_use:
-    print("Slack 사용 ON!")
-
-
-def msg_to_slack(msg, url=slack_url):
-    try:
-        requests.post(
-            url,
-            json={"text": msg},
-            headers={"Content-type": "application/json"},
-            timeout=10,
-        )
-    except requests.RequestException as e:
-        print(f"[warn] Slack 알림 전송 실패: {e}")
+print("카카오톡 알림 ON!")
 
 
 # 시간 계산 함수
@@ -209,8 +199,7 @@ if KR.login():
                 try:
                     rslt = KR.reserve(interesting_train, [AdultPassenger(int(people_num))])
                     if rslt:
-                        if slack_use:
-                            msg_to_slack(repr(rslt))
+                        notify.send(f"KTX 예매 성공!\n{rslt}\n20분 내로 결제해주세요.")
                         print("\n", "=" * 20, " 열차표 예매에 성공했습니다!! 20분 내로 결제 해주십시오. ", "=" * 20)
                         print(rslt)
 
@@ -227,6 +216,7 @@ if KR.login():
                     if "WRR800029" in repr(e):
                         state = False
                         print("예매 과정에서 에러가 발생하여 프로그램을 종료합니다. 에러 로그를 확인하세요")
+                        notify.send(f"KTX 예매 매크로 오류로 종료되었습니다.\n{e}")
                     print(e)
 
             if state:
