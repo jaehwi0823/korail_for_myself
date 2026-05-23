@@ -19,7 +19,7 @@ POLL_MIN_SEC = 2.0           # polling interval lower bound
 POLL_MAX_SEC = 3.5           # polling interval upper bound (randomized to
                              # avoid a fixed request cadence anti-bot pattern)
 LOG_INTERVAL_SEC = 600       # progress log cadence (10 min)
-MAX_RUNTIME_SEC = 6 * 3600   # safety stop: give up after this long
+MAX_RUNTIME_SEC = 24 * 3600  # safety stop: give up after this long
 # --------------------------------------------------------------------------
 
 
